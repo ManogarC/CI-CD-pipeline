@@ -23,6 +23,13 @@ pipeline {
             }
         }
 
+        stage('Branch Information') {
+            steps {
+                echo "Building branch: ${env.BRANCH_NAME}"
+                echo "Build number: ${env.BUILD_NUMBER}"
+            }
+        }
+
         stage('Compile') {
             steps {
                 bat 'mvn -B clean compile'
@@ -43,13 +50,13 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t jenkins-java-demo:%BUILD_NUMBER% .'
+                bat 'docker build -t jenkins-java-demo:%BUILD_TAG% .'
             }
         }
 
         stage('Docker Smoke Test') {
             steps {
-                bat 'docker run --rm jenkins-java-demo:%BUILD_NUMBER%'
+                bat 'docker run --rm jenkins-java-demo:%BUILD_TAG%'
             }
         }
     }
