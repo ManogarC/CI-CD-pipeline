@@ -1,15 +1,19 @@
+
 pipeline {
     agent any
+
     options {
         skipDefaultCheckout(true)
         timestamps()
     }
+
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
+
         stage('Verify Tools') {
             steps {
                 bat 'java -version'
@@ -18,32 +22,45 @@ pipeline {
                 bat 'docker --version'
             }
         }
+
+        stage('Branch Information') {
+            steps {
+                echo "Building branch: ${env.BRANCH_NAME}"
+                echo "Build number: ${env.BUILD_NUMBER}"
+            }
+        }
+
         stage('Compile') {
             steps {
                 bat 'mvn -B clean compile'
             }
         }
+
         stage('Unit Tests') {
             steps {
                 bat 'mvn -B test'
             }
         }
+
         stage('Package JAR') {
             steps {
                 bat 'mvn -B package -DskipTests'
             }
         }
+
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t jenkins-java-demo:%BUILD_NUMBER% .'
+                bat 'docker build -t jenkins-java-demo:%BUILD_TAG% .'
             }
         }
+
         stage('Docker Smoke Test') {
             steps {
-                bat 'docker run --rm jenkins-java-demo:%BUILD_NUMBER%'
+                bat 'docker run --rm jenkins-java-demo:%BUILD_TAG%'
             }
         }
     }
+
     post {
         always {
             junit testResults: 'target/surefire-reports/TEST-*.xml',
